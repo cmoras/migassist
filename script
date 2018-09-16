@@ -1,40 +1,43 @@
 >list.shared
 >list.reseller
+>list.output
 
 echo "which home do you want to check against?"
 echo "please mention it as /home\d"
 read home
 
+cd $home;
+count=$(ls -lah | wc -l)
 echo "how many accounts do you want ot check against?"
-echo "just the number eg: 10"
+echo "just the number eg: 10, max no. : $count"
 read number
 
 echo "Lets begin with finding either shared or resellers among these."
 echo "eg: Shared ||  Reseller"
 read choice
 
-
-
 function testing {
 	cat $1 | while read u;
 			do
-			echo "-=-=-=-=-=-=-=-=-=-=-";
-			echo $u; 
-			echo "-=-=-=-=-=-=-=-=-=-=-"; 
+			export pri=0;
+			echo "-=-=-=-=-=-=-=-=-=-=-" >> list.output; 
+			size=$(du -sh $home/$u)
+			echo "$u   ::  $size" >> list.output; 
+			echo "-=-=-=-=-=-=-=-=-=-=-" >> list.output; 
 			for i in `grep $u /etc/userdomains|cut -d':' -f1`;
 				do
-				priority=0
 				dig +short ns $i |while read p; 
 						do
 						if [[ "$p" == "ns1.site5.com." || "$p" == "ns2.site5.com." ]]; then 
-							echo "Migrate $u"; 
+							echo "Migrate $u" >> list.output; 
 						else	
 							#echo "before break prio here :: $priority"
-							if [[ $priority == 0 ]]; then
-								echo "Differnet DNS - 2nd priority";
-								priority=1
-								break;
+							if [[ "$pri" == "1" ]]; then
+								break 2;
 							fi
+							echo "Differnet DNS - 2nd priority" >> list.output; 
+							pri=1;
+							
 						fi
 						done
 				done
@@ -48,17 +51,19 @@ do
 	hello=$(whmapi1 accountsummary  user="$i" | grep "owner" | cut -d: -f2); 
 	if [[ $choice == "Shared" ]]; then
 		if [[ $hello == " root" ]]; then 
-			echo "$i" | tee -a list.shared;
+			echo "$i" >> list.shared;
 #			testing list.shared;
 		fi;
 	elif [[ $choice == "Reseller" ]]; then 
 		if [[ $hello == " $i" ]]; then 
-			echo "$i" | tee -a list.reseller;
+			echo "$i" >>  list.reseller;
 #			testing list.reseller;
 		fi
 	fi
 done
 
-testing list.shared;
-testing list.reseller
+
+if [[ $choice  == "Shared" ]]; then 
+	testing list.shared;
+fi
 
