@@ -1,0 +1,45 @@
+import re
+
+crlist=[]
+remove_list=[]
+add_resellerlist=[]
+set_create=()
+set_remove=()
+add_reseller=()
+
+
+#def funct_set(s):
+#	create_list.append(s)
+#	print(create_list[])
+	
+with open("log") as it:
+	for line in it:
+		ne_line=re.findall(r'2019\S+', line)
+		if ne_line and ne_line[0].split(':')[1] == 'CREATE':
+			set_create=(ne_line[0].split(':')[2], ne_line[0].split(':')[6])
+			crlist.append(set_create)
+		if ne_line and ne_line[0].split(':')[1] == 'REMOVE':
+			set_remove=(ne_line[0].split(':')[2], ne_line[0].split(':')[5])
+			remove_list.append(set_remove)
+		if ne_line and ne_line[0].split(':') == 'ADDRESELLER':
+			add_reseller=(ne_line[0].split(':')[2], ne_line[0].split(':')[5])
+			add_resellerlist.append(add_reseller)
+
+
+print("__________________")
+print("New user details:")
+print("__________________")
+for i,j in crlist:
+	print(f"{i}\t\t\t{j}")
+
+print("__________________")
+print("Users removed:")
+print("__________________")
+for i,j	in remove_list:
+	print(f"{i}\t\t\t{j}")
+
+print("__________________")
+print("Reseller added:")
+print("__________________")
+for i,j in add_resellerlist:
+	print(f"{i}\t\t\t{j}")
